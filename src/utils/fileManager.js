@@ -1,61 +1,67 @@
 import fs from 'fs';
 import path from 'path';
 
-export function processResponse(response, projectDir) {
-  return new Promise((resolve, reject) => {
-    try {
-      console.log("Creating files...");
-      const lines = response.split("\n");
+export async function processResponse(response, projectDir) {
+  try {
+    console.log("\nCreating files...");
+    const lines = response.split("\n");
 
-      let currentFile = "";
-      let fileContent = [];
-      let insideCodeBlock = false;
+    let currentFile = "";
+    let fileContent = [];
+    let insideCodeBlock = false;
 
-      lines.forEach((line) => {
-        line = line.replace(/\*/g, '').trim();
+    for (const line of lines) {
+      let trimmedLine = line.replace(/\*/g, '').trim();
 
-        if (line.startsWith("FILE:")) {
-          if (currentFile && fileContent.length > 0) {
-            writeFile(`${projectDir}/${currentFile}`, fileContent.join("\n"));
-          }
-          currentFile = line.split("FILE: ")[1].trim();
-          fileContent = [];
-          return;
+      if (trimmedLine.startsWith("FILE:")) {
+        // Write the previous file if there's any content
+        if (currentFile && fileContent.length > 0) {
+          await writeFile(`${projectDir}/${currentFile}`, fileContent.join("\n"));
         }
 
-        if (line.startsWith("```")) {
-          insideCodeBlock = !insideCodeBlock;
-          return;
-        }
-
-        if (insideCodeBlock && currentFile) {
-          fileContent.push(line);
-        }
-      });
-
-      if (currentFile && fileContent.length > 0) {
-        writeFile(`${projectDir}/${currentFile}`, fileContent.join("\n"));
-        console.log("file created")
+        // Start tracking the new file
+        currentFile = trimmedLine.split("FILE: ")[1].trim();
+        fileContent = [];
+        continue;
       }
 
-      console.log("file created")
+      if (trimmedLine.startsWith("```")) {
+        insideCodeBlock = !insideCodeBlock;
+        continue;
+      }
 
-      resolve();
-    } catch (error) {
-      console.log("error creating file")
-      reject(error);
+      // Collect lines inside the code block
+      if (insideCodeBlock && currentFile) {
+        fileContent.push(trimmedLine);
+      }
     }
-  });
+
+    // Write the last file if there's any content
+    if (currentFile && fileContent.length > 0) {
+      await writeFile(`${projectDir}/${currentFile}`, fileContent.join("\n"));
+    }
+
+    console.log('All files created successfully.');
+  } catch (error) {
+    console.error("Error creating files:", error);
+    throw error;
+  }
 }
 
-function writeFile(filePath, content) {
-  const dir = path.dirname(filePath);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFile(filePath, content, (err) => {
-    if (err) {
-      console.error(`Error writing to file ${filePath}:`, err);
-    } else {
-      console.log(`File '${filePath}' created successfully.`);
-    }
-  });
+
+async function writeFile(filePath, content) {
+  try {
+    const dir = path.dirname(filePath);
+    
+    // Create the directory if it doesn't exist (recursively)
+    await fs.promises.mkdir(dir, { recursive: true });
+    
+    // Write the file content
+    await fs.promises.writeFile(filePath, content);
+
+    console.log(`File '${filePath}' created successfully.`);
+  } catch (err) {
+    console.error(`Error writing to file ${filePath}:`, err);
+    throw err; // Re-throw error to allow handling by the caller
+  }
 }

@@ -7,7 +7,10 @@ import { chat } from "./utils/aiHandler.js";
 import { executePlan } from "./utils/planExecutor.js";
 import { installModulesFromResponse } from "./utils/moduleInstaller.js";
 import chalk from "chalk";
+import Together from "together-ai";
+
 import { dependencyPrompt } from "./prompt/index.js";
+
 
 const model = "llama3.1";
 const messages = [
@@ -27,14 +30,14 @@ function main(args) {
 
   if (args === "create app")
     message =
-      "Dev AI: Hello i am your AI agent how can i help you with development \nYou:";
+      "Dev AI: Hey there, developer! I'm Dev.AI, your AI coding assistant – ready to help you build, debug, and innovate. How can I assist you today? \nYou:";
 
   return inquirer
     .prompt([
       {
         type: "input",
         name: "user_input",
-        message: message,
+        message: chalk.greenBright(message),
         prefix: "",
       },
     ])
@@ -106,14 +109,8 @@ function main(args) {
 
           // Step 3: Execute the plan based on the AI’s JSON response
           await executePlan(plan, appDetails.appName, messages);
-
+          
           // Step 4: Install necessary modules based on AI response
-
-          console.log(
-            "\n Installing Modules \n",
-            JSON.stringify(plan, null, 2)
-          );
-
           // module executer
           messages.push({
             role: "user",
@@ -133,7 +130,6 @@ function main(args) {
       }
     });
 }
-
 main("create app");
 
 async function chat2(messages) {
@@ -142,10 +138,23 @@ async function chat2(messages) {
     messages: messages,
   };
 
-  const response = await fetch("http://localhost:11434/api/chat", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+const together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
+
+  
+  // running on local llama3.1 
+
+  // const response = await fetch("http://localhost:11434/api/chat", {
+  //   method: "POST",
+  //   body: JSON.stringify(body),
+  // });
+
+// running on hosted verions 
+const response = await together.chat.completions.create({
+    messages: messages,
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+});
+  
+console.log(response.choices[0].message.content)
 
   const reader = response.body?.getReader();
   if (!reader) {

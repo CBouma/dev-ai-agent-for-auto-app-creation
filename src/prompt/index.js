@@ -32,7 +32,7 @@ Component:
     "use client";
     import axios from "axios";
     import { useState, useEffect } from "react";
-    import { ForecastProps } from "./src/types/WeatherForecastType";
+    import { ForecastProps } from "@/types/WeatherForecastType";
     import style from "./WeatherForecast.module.css";
 
     export default function WeatherForecast({ location }: ForecastProps) {
@@ -59,6 +59,11 @@ Component:
     }
     \`\`\`
 
+    FILE: src/components/WeatherForecast/index.ts
+    \`\`\`typescript
+    import WeatherForecast from './WeatherForecast";
+    export {WeatherForecast};
+
  
     FILE: src/components/WeatherForecast/WeatherForecast.module.css
     \`\`\`css
@@ -83,7 +88,6 @@ Component:
 Make sure all files are created with valid code, and ensure proper folder structure as shown in the example.
 `;
 
-
 const pagePrompt = `
 You are a developer agent tasked with creating a Next.js page using TypeScript. The page should include the following:
 
@@ -103,10 +107,10 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
        
 ### Page Output Format example:
     
-    FILE:src/pages/Weather.tsx 
+    FILE:src/pages/Weather/Weather.tsx 
     \`\`\`typescript
-    import WeatherForecast from "@/components/WeatherForecast";
-    import Layout from "@/components/Layout";
+    import WeatherForecast from "@components/WeatherForecast";
+    import Layout from "@components/Layout";
     import styles from "./Weather.module.css"; // Optional if custom styles are needed
 
     export default function WeatherPage() {
@@ -120,8 +124,14 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
       );
     }
     \`\`\`
+
+    FILE: src/pages/Weather/index.ts
+    \`\`\`typescript
+    import Weather from "./Weather";
+    export default Weather;
+
   
-    FILE: src/pages/Weather.module.css
+    FILE: src/pages/Weather/Weather.module.css
     \`\`\`css
     .weatherContainer {
       background-color: #f0f0f0;
@@ -131,7 +141,6 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
     \`\`\`
 
 `;
-
 
 const apiPrompt = `
 You are a developer agent tasked with creating a Next.js API route using TypeScript. The API route should include the following:
@@ -158,7 +167,7 @@ You are a developer agent tasked with creating a Next.js API route using TypeScr
     FILE: src/pages/api/todos.ts
     \`\`\`typescript
     import { NextApiRequest, NextApiResponse } from 'next';
-    import { Todo } from './types';
+    import { Todo } from '@/types/TodoType';
 
     let todos: Todo[] = [];
 
@@ -214,7 +223,6 @@ You are a developer agent tasked with creating a Next.js API route using TypeScr
    - Ensure proper error handling and status codes for success or failure.
 `;
 
-
 const dependencyPrompt = `
 You are a developer agent tasked with generating the list of required modules for a Next.js project. The modules should be identified based on the components, pages, or APIs that are being generated. 
 
@@ -242,10 +250,4 @@ Provide the list of required modules in the following format:
 The output should only include the required modules and their versions. Do not include any extra explanations or comments. Use the latest stable versions unless a specific version is necessary for compatibility.
 `;
 
-
-export {
-    componentPrompt,
-    pagePrompt,
-    apiPrompt,
-    dependencyPrompt
-}
+export { componentPrompt, pagePrompt, apiPrompt, dependencyPrompt };
