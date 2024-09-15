@@ -1,66 +1,41 @@
-import axios from 'axios';
 import chalk from 'chalk';
-import { TextDecoder } from 'util';
+import OpenAI from "openai";
 
-const model = "llama3.1";
+// Use environment variables for API keys for security
+const API_KEY = 'sk-EY25eX5-bA2a11MQF2OPbYB0NrqxbWAZuNTw6AkKPPT3BlbkFJ8MulClG6_Wgts7mNk_H_kb4DY7TildpbOXcQwcONkA'; // Set your OpenAI API key in an environment variable
 
-function chat(messages) {
-  const body = {
-    model: model,
-    messages: messages,
-  };
+// Initialize OpenAI instance with your API key
+const openai = new OpenAI({
+  apiKey: API_KEY, // Use environment variables for security
+});
 
-  return axios({
-    method: 'post',
-    url: 'http://localhost:11434/api/chat',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    responseType: 'stream', // Set response type to stream
-  })
-    .then(response => {
-      const decoder = new TextDecoder();
-      let content = '';
+async function chat(messages) {
+  let content = '';
 
-      // Handle the streaming response by reading chunks of data
-      return new Promise((resolve, reject) => {
-        response.data.on('data', (chunk) => {
-          const rawjson = decoder.decode(chunk, { stream: true }); // Decode chunk as text
-          let json;
-
-          try {
-            const jsonObjects = rawjson.trim().split("\n");
-            jsonObjects.forEach((jsonStr) => {
-              try {
-                json = JSON.parse(jsonStr);
-                if (json.done === false) {
-                  process.stdout.write(chalk.green(json.message.content));
-                  content += json.message.content;
-                }
-              } catch (error) {
-                console.error('Error parsing JSON:', error);
-              }
-            });
-          } catch (e) {
-            console.error('Error parsing chunk:', e);
-          }
-        });
-
-        response.data.on('end', () => {
-          resolve({ role: 'assistant', content });
-        });
-
-        response.data.on('error', (error) => {
-          console.error('Error in stream:', error);
-          reject(error);
-        });
-      });
-    })
-    .catch(error => {
-      console.error("Error from llama", error);
-      throw error; // Pass the error up the chain
+  try {
+    // Create a stream using OpenAI's chat completion API
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // Ensure the model name is valid
+      messages: messages,
+      stream: true, // Enable streaming
+      temperature:0.5
     });
+
+    // Process the stream using for await...of loop
+    for await (const chunk of stream) {
+      // Extract and display the chunk's content, if available
+      const chunkContent = chunk.choices[0]?.delta?.content || "";
+      process.stdout.write(chalk.green(chunkContent));
+      content += chunkContent; // Accumulate the content
+    }
+
+    // Return the accumulated content
+    return { role: 'assistant', content: content.trim() };
+
+  } catch (error) {
+    console.error('Error from OpenAI:', error);
+    throw error; // Pass the error up the chain
+  }
 }
 
 export { chat };
