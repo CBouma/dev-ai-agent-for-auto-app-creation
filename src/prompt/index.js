@@ -177,9 +177,9 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
     \`\`\`
     
 
-    FILE:src/app/weather/layout.tsx 
+    FILE:src/app/layout.tsx 
     \`\`\`typescript
-    import "../globals.css";
+    import "./globals.css";
 
     export default function PageLayout({
       children,
@@ -189,7 +189,7 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
       return (
         <html lang="en">
         <body className="bg-white-800">
-          <div className="fixed h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-100">
+          <div className="h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-100">
             <header className="bg-gray-800 shadow tx-white">
               <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                 <h1 className="text-3xl tracking-tight text-black-900">
@@ -206,8 +206,6 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
       );
     }
     \`\`\`
-
-
 
 `;
 
@@ -242,6 +240,26 @@ You are a developer agent tasked with creating a Next.js API route using TypeScr
     let todos: Todo[] = [];
 
     export default function handler(req: NextApiRequest, res: NextApiResponse) {
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': "Bearer sk-EY25eX5-bA2a11MQF2OPbYB0NrqxbWAZuNTw6AkKPPT3BlbkFJ8MulClG6_Wgts7mNk_H_kb4DY7TildpbOXcQwcONkA",
+      },
+      body: JSON.stringify({
+        model: 'gpt-4', // Use the correct model name
+        messages: [
+          {
+            role: 'user',
+            content: "promt text for chatgpt",
+          },
+        ],
+      }),
+    });
+
+  const data = await response.json();
+
       switch (req.method) {
         case 'GET':
           res.status(200).json(todos);

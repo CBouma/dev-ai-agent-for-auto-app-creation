@@ -15,7 +15,7 @@ async function chat(messages) {
   try {
     // Create a stream using OpenAI's chat completion API
     const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Ensure the model name is valid
+      model: "gpt-4o", // Ensure the model name is valid
       messages: messages,
       stream: true, // Enable streaming
       temperature:0.5
