@@ -7,7 +7,6 @@ import { chat } from "./utils/aiHandler.js";
 import { executePlan } from "./utils/planExecutor.js";
 import { installModulesFromResponse } from "./utils/moduleInstaller.js";
 import chalk from "chalk";
-import Together from "together-ai";
 
 import { dependencyPrompt } from "./prompt/index.js";
 
@@ -131,69 +130,6 @@ function main(args) {
     });
 }
 main("create app");
-
-async function chat2(messages) {
-  const body = {
-    model: model,
-    messages: messages,
-  };
-
-const together = new Together({ apiKey: process.env.TOGETHER_API_KEY });
-
-  
-  // running on local llama3.1 
-
-  // const response = await fetch("http://localhost:11434/api/chat", {
-  //   method: "POST",
-  //   body: JSON.stringify(body),
-  // });
-
-// running on hosted verions 
-const response = await together.chat.completions.create({
-    messages: messages,
-    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-});
-  
-console.log(response.choices[0].message.content)
-
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error("Failed to read response body");
-  }
-  let content = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    const rawjson = new TextDecoder().decode(value);
-
-    let json;
-    try {
-      const jsonObjects = rawjson.trim().split("\n");
-
-      jsonObjects.forEach((jsonStr) => {
-        try {
-          json = JSON.parse(jsonStr);
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-        }
-      });
-    } catch (e) {
-      console.error("Error parsing JSON:", e.message);
-      console.error("Raw response received:", rawjson); // Output raw response for debugging
-      process.stdout.write(rawjson); // Output the raw non-JSON response directly
-      //   content += json.message.content;  // Treat the raw response as plain text
-      continue; // Skip the rest and proceed with the next chunk of data
-    }
-
-    if (json.done === false) {
-      process.stdout.write(chalk.green(json.message.content));
-      content += json.message.content;
-    }
-  }
-  return { role: "assistant", content: content };
-}
 
 function extractJsonFromMarkdown(input) {
   // Step 1: Use a regular expression to extract the JSON content between the ```json block
