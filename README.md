@@ -12,7 +12,7 @@ run :
 - npm link
     - then run "dev-ai" cli from anywhere of the terminal 
 
-## Want to conribute ?
+## Want to contribute ?
 
 - Stay tuned for project link for the list of features we are working on. 
 - Create issue for feature requests and bugs. We will work on this ASAP to fix it  
