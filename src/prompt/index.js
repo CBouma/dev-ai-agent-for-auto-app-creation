@@ -6,6 +6,7 @@ You are a developer agent tasked with creating a React component using TypeScrip
   - If any state or effects are required, ensure they are handled using \`useState\` and \`useEffect\`.
   - Ensure the component has appropriate props typing by creating a \`types.ts\` file for prop types.
   - Import Tailwind CSS classes for styling, and also include a separate \`.module.css\` file if additional styles are required.
+  - no code comments for any file type.
 
 2. Type Definitions (\`types.ts\`):
   - Define the prop types for the component inside a \`types.ts\` file in the same directory as the component.
@@ -13,6 +14,7 @@ You are a developer agent tasked with creating a React component using TypeScrip
 
 3. CSS Module (\`.module.css\`):
   - If required, define additional CSS styling in a \`.module.css\` file and import it inside the component file.
+  - no code comments for any file type.
 
 Component:
     - Ensure the file includes "use client" at the top if the component contains client-side logic.
@@ -23,11 +25,12 @@ Component:
     - you should be implement state logic and other intraction logic
     - Do not leave logic implementation as empty
     - High imp rule: i am using "FILE: " so all file name shuld be in this format "FILE: [file name]" 
-    - High imp rule: iam using  \`\`\` to extact code so maintain that 
+    - High imp rule: iam using  \`\`\` to extact code so maintain that
+    - component should have index.ts
     
     ### components Output Format example:
 
-    FILE: src/components/WeatherForecast/WeatherForecast.tsx
+    FILE: src/components/weatherForecast/WeatherForecast.tsx
     \`\`\`typescript
     "use client";
     import axios from "axios";
@@ -59,17 +62,18 @@ Component:
     }
     \`\`\`
 
-    FILE: src/components/WeatherForecast/index.ts
+    FILE: src/components/weatherForecast/index.ts
     \`\`\`typescript
     import WeatherForecast from './WeatherForecast";
-    export {WeatherForecast};
+    export WeatherForecast;
 
  
-    FILE: src/components/WeatherForecast/WeatherForecast.module.css
+    FILE: src/components/weatherForecast/WeatherForecast.module.css
     \`\`\`css
     .container {
       max-width: 300px;
       margin: 40px auto;
+      color: #000;
     }
     \`\`\`
   
@@ -84,6 +88,9 @@ Component:
       temperature: number;
     }
     \`\`\`
+
+    
+
 
 Make sure all files are created with valid code, and ensure proper folder structure as shown in the example.
 `;
@@ -103,40 +110,100 @@ You are a developer agent tasked with creating a Next.js page using TypeScript. 
    - Make sure the CSS file is placed in the correct location and imported in the page as necessary.
 
 3. Only create Page wrapper and import the before created child component and build app.
-    - Don't create any Component at this point
+    - no code comments for any file type.
+    - no state logic goes inside the page component as that is stateless page 
+    - any logic reated should be in mainwrapper if required
        
 ### Page Output Format example:
+
+  FILE: src/components/weather/weatherWrapper.tsx
+  \`\`\`typescript
+  "use client";
+  import axios from "axios";
+  import { useState, useEffect } from "react";
+  import WeatherForecast from "@/types/WeatherForecastType";
+  import WeatherForecast from "@/components/WeatherForecast";
+  import style from "./WeatherForecast.module.css";
+
+  export default function weatherWrapper({ location }: ForecastProps) {
+    // entire app logic 
+    const [forecastData, setForecastData] = useState(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+      // Fetch weather data using location prop
+      axios.get(\`/api/weather?location=\${location}\`)
+        .then(response => setForecastData(response.data))
+        .catch(error => setError(error));
+    }, [location]);
+
+    return (
+      <div className="mx-5 flex h-16 w-full max-w-screen-xl items-center justify-between">
+        <WeatherForecast/>
+      </div>
+    );
+  }
+  \`\`\`
+
+  FILE: src/components/weatherWrapper/index.ts
+  \`\`\`typescript
+  import weatherWrapper from './weatherWrapper";
+  export weatherWrapper;
+  \`\`\`
+
     
-    FILE:src/pages/Weather/Weather.tsx 
+    FILE:src/app/weather/page.tsx 
     \`\`\`typescript
-    import WeatherForecast from "@components/WeatherForecast";
-    import Layout from "@components/Layout";
-    import styles from "./Weather.module.css"; // Optional if custom styles are needed
+    import weatherWrapper from "@/components/weatherWrapper";
+    import styles from "./Weather.module.css"; 
 
     export default function WeatherPage() {
       return (
-        <Layout>
           <div className={\`container mx-auto p-4 \${styles.weatherContainer}\`}>
             <h1 className="text-3xl font-bold">Weather Report</h1>
-            <WeatherForecast location="San Francisco" />
+            <weatherWrapper/>  
           </div>
-        </Layout>
       );
     }
     \`\`\`
-
-    FILE: src/pages/Weather/index.ts
-    \`\`\`typescript
-    import Weather from "./Weather";
-    export default Weather;
-
   
-    FILE: src/pages/Weather/Weather.module.css
+    FILE: src/app/weather/Weather.module.css
     \`\`\`css
     .weatherContainer {
-      background-color: #f0f0f0;
+      background-color: #f0f0f0; 
       padding: 20px;
       border-radius: 8px;
+    }
+    \`\`\`
+    
+
+    FILE:src/app/layout.tsx 
+    \`\`\`typescript
+    import "./globals.css";
+
+    export default function PageLayout({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) {
+      return (
+        <html lang="en">
+        <body className="bg-white-800">
+          <div className="h-screen w-full bg-gradient-to-br from-indigo-50 via-white to-cyan-100">
+            <header className="bg-gray-800 shadow tx-white">
+              <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <h1 className="text-3xl tracking-tight text-black-900">
+                  Dashboard
+                </h1>
+              </div>
+            </header>
+            <main className="flex min-h-screen w-full flex-col items-center justify-center text-black">
+              {children}
+            </main>
+          </div>
+        </body>
+      </html>
+      );
     }
     \`\`\`
 
@@ -161,17 +228,38 @@ You are a developer agent tasked with creating a Next.js API route using TypeScr
     - High imp rule: i am using "FILE: " so all file name shuld be in this format "FILE: [file name]" 
     - High imp rule: iam using  \`\`\` to extact code so maintain that
     - I want entire api logic inside one single file
+    - no code comments for any file type.
 
 ### API Output Format example:
 
-    FILE: src/pages/api/todos.ts
+    FILE: src/app/api/todos.ts
     \`\`\`typescript
     import { NextApiRequest, NextApiResponse } from 'next';
-    import { Todo } from '@/types/TodoType';
+    import { Todo } from './types/TodoType';
 
     let todos: Todo[] = [];
 
     export default function handler(req: NextApiRequest, res: NextApiResponse) {
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': "Bearer sk-EY25eX5-bA2a11MQF2OPbYB0NrqxbWAZuNTw6AkKPPT3BlbkFJ8MulClG6_Wgts7mNk_H_kb4DY7TildpbOXcQwcONkA",
+      },
+      body: JSON.stringify({
+        model: 'gpt-4', // Use the correct model name
+        messages: [
+          {
+            role: 'user',
+            content: "promt text for chatgpt",
+          },
+        ],
+      }),
+    });
+
+  const data = await response.json();
+
       switch (req.method) {
         case 'GET':
           res.status(200).json(todos);
@@ -205,7 +293,7 @@ You are a developer agent tasked with creating a Next.js API route using TypeScr
     }
     \`\`\`
 
-    FILE: src/pages/api/todos/types.ts
+    FILE: src/api/types/TodoTypes.ts
     \`\`\`typescript
     export interface Todo {
       id: string;
@@ -241,8 +329,8 @@ Provide the list of required modules in the following format:
 \`\`\`json
 {
   "modules": [
-    { "name": "axios", "version": "^0.21.1" },
-    { "name": "tailwindcss", "version": "^2.2.19" }
+    { "name": "axios", "version": "latest" },
+    { "name": "tailwindcss", "version": "latest" }
   ]
 }
 \`\`\`

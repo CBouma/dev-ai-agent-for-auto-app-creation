@@ -3,73 +3,90 @@ import ora from 'ora';
 
 // Extract modules from the AI response
 export function extractModules(rawResponse) {
-  // Update the regex to properly handle multi-line JSON block
   const match = rawResponse.match(/```json\s*([\s\S]*?)\s*```/);
   if (match && match[1]) {
     try {
-      const jsonString = match[1].trim();  // Clean up any extra spaces or newlines
-      const parsedData = JSON.parse(jsonString);  // Parse the JSON string
-
-      // Now looking for "modules" and return the formatted module list
-      return parsedData.modules.map(module => `${module.name} --save`) || [];
+      const jsonString = match[1].trim();
+      const parsedData = JSON.parse(jsonString);
+      return (
+        parsedData.modules.map(
+          (module) => `${module.name}@${module.version}`,
+        ) || []
+      );
     } catch (error) {
-      console.error("Error parsing JSON:", error);
+      console.error('Error parsing JSON:', error);
       return [];
     }
   } else {
-    console.error("No JSON block found or incorrect format");
+    console.error('No JSON block found or incorrect format');
     return [];
   }
 }
 
-// Install the modules with progress tracking
-export function installModulesWithProgress(modulesList) {
+// Install a single module asynchronously
+async function installModule(module, directory) {
   return new Promise((resolve, reject) => {
-    try {
-      const command = 'npm';
-      const args = ['install', ...modulesList];  // Pass both module names and versions
+    const command = 'npm';
+    const args = ['install', module, '--save'];
 
-      const spinner = ora(
-        `Installing modules: ${modulesList.join(", ")}...`
-      ).start();
+    const spinner = ora(`Installing module: ${module}...`).start();
 
-      const process = spawn(command, args);
+    const process = spawn(command, args, { shell: true, cwd: directory });
 
-      // Show progress in the spinner
-      process.stdout.on('data', (data) => {
-        spinner.text = data.toString();
-      });
+    process.stdout.on('data', (data) => {
+      spinner.text = data.toString();
+    });
 
-      // Show any errors or warnings
-      process.stderr.on('data', (data) => {
-        spinner.text = data.toString();
-      });
+    process.stderr.on('data', (data) => {
+      spinner.text = data.toString();
+    });
 
-      // Close process and resolve or reject based on exit code
-      process.on('close', (code) => {
-        if (code === 0) {
-          spinner.succeed(`Modules '${modulesList.join(", ")}' installed successfully.`);
-          resolve();
-        } else {
-          spinner.fail(`Process exited with code ${code}`);
-          reject(new Error(`Process exited with code ${code}`));
-        }
-      });
-    } catch (error) {
-      spinner.fail(`Failed to install modules: ${error.message}`);
-      reject(error);
-    }
+    process.on('close', (code) => {
+      if (code === 0) {
+        spinner.succeed(`Module '${module}' installed successfully.`);
+        resolve();
+      } else {
+        spinner.fail(
+          `Failed to install module: ${module}. Exited with code ${code}`,
+        );
+        reject(
+          new Error(
+            `Failed to install module: ${module}. Exited with code ${code}`,
+          ),
+        );
+      }
+    });
   });
 }
 
-// Main function to extract and install modules from AI's response
-export function installModulesFromResponse(rawResponse) {
+// Install modules one by one asynchronously
+export async function installModulesWithProgress(modulesList, directory) {
+  for (const module of modulesList) {
+    try {
+      await installModule(module, directory);
+    } catch (error) {
+      console.error(`Error installing module ${module}:`, error);
+      break; // Stop the installation process if a module fails
+    }
+  }
+}
+
+// Main function to extract and install modules from AI's response asynchronously
+export async function installModulesFromResponse(rawResponse, directory) {
   const modules = extractModules(rawResponse);
   if (modules.length > 0) {
-    installModulesWithProgress(modules)
-      .then(() => console.log("Modules installed successfully!"))
-      .catch((error) => console.error("Installation failed:", error));
+    try {
+      await installModulesWithProgress(modules, directory);
+      console.log('All modules installed successfully!');
+
+      // const command = 'npm';
+      // const args = ['run', 'dev'];
+
+      // spawn(command, args, { shell: true, cwd: directory });
+    } catch (error) {
+      console.error('Installation failed:', error);
+    }
   } else {
-    console.error("No modules found to install.");
+    console.error('No modules found to install.');
   }
 }
