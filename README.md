@@ -1,6 +1,6 @@
 # Dev AI agent
 
-### Note:
+### ⚠️ Note:
 Please refer to the URL below for new open-source repositories that require your contribution:
 
 [New Open Source Repositories](https://github.com/dev-ai-agent/dev-ai-agent)
