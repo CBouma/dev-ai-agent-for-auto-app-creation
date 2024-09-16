@@ -1,8 +1,7 @@
 import chalk from 'chalk';
 import OpenAI from "openai";
 
-// Use environment variables for API keys for security
-const API_KEY = 'sk-'; // Set your OpenAI API key in an environment variable
+const API_KEY = process.env.OPEN_API_KEY
 
 // Initialize OpenAI instance with your API key
 const openai = new OpenAI({
